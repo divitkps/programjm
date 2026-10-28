@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}KPS Sistem Distributor{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+{% if user %}
+<header class="top">
+  <a class="brand" href="/">KPS<span>DMS</span></a>
+  <nav>
+    <a href="/">Ringkasan</a>
+    <a href="/orders">Pesanan</a>
+    <a href="/orders/new" class="primary-link">+ Pesanan</a>
+    {% if user.can_decide %}<a href="/approvals">Persetujuan</a>{% endif %}
+    <a href="/stores">Toko</a>
+    <a href="/catalog">Katalog</a>
+  </nav>
+  <div class="who">
+    <span>{{ user.full_name }} · {{ user.entity_code }}</span>
+    <form method="post" action="/logout"><button class="link">Keluar</button></form>
+  </div>
+</header>
+{% endif %}
+<main>
+  {% if flash %}<div class="flash {{ flash.kind }}">{{ flash.text }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

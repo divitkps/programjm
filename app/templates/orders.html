@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-head">
+  <h1>Pesanan</h1>
+  <a class="btn" href="/orders/new">+ Pesanan</a>
+</div>
+<nav class="filters">
+  {% for s in ['', 'PENDING_APPROVAL', 'APPROVED', 'CONFIRMED', 'DELIVERED', 'REJECTED', 'CANCELLED'] %}
+  <a href="/orders{% if s %}?status={{ s }}{% endif %}" class="{% if s == status %}on{% endif %}">{{ STATUS[s] if s else 'Semua' }}</a>
+  {% endfor %}
+</nav>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Pesanan</th><th>Tanggal</th><th>Toko</th>{% if user.is_principal %}<th>Dist.</th>{% endif %}<th>Sales</th><th class="num">Nilai bersih</th>{% if user.sees_margin %}<th class="num">Margin</th>{% endif %}<th>Status</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><a href="/orders/{{ r.order_id }}">{{ r.order_no }}</a>{% if r.order_type == 'PROJECT' %} <span class="tag">Proyek</span>{% endif %}</td>
+      <td>{{ r.order_date | tgl }}</td><td>{{ r.store_name }}</td>
+      {% if user.is_principal %}<td>{{ r.entity_code }}</td>{% endif %}
+      <td>{{ r.rep or '–' }}</td><td class="num">{{ r.total_net | rp }}</td>
+      {% if user.sees_margin %}<td class="num">{{ r.margin_pct | pct }}</td>{% endif %}
+      <td><span class="tag status-{{ r.status | lower }}">{{ STATUS.get(r.status, r.status) }}</span></td>
+    </tr>
+  {% else %}<tr><td colspan="8" class="muted">Belum ada pesanan.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

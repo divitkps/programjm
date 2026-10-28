@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Menunggu keputusan Anda</h1>
+<p class="muted">Setiap keputusan wajib disertai alasan singkat. Alasan ditampilkan ke sales dan disimpan untuk rapat mingguan.</p>
+{% for r in rows %}
+<article class="card approval">
+  <header>
+    <a href="/orders/{{ r.order_id }}"><strong>{{ r.order_no }}</strong></a>
+    <span class="tag {% if r.level == 'PRINCIPAL' %}warn{% endif %}">{{ LEVEL.get(r.level, r.level) }} · {{ REASON.get(r.reason_code, r.reason_code) }}</span>
+    <span class="muted">menunggu {{ r.hours_waiting | angka(1) }} jam</span>
+  </header>
+  <p>{{ r.store_name }} (klasifikasi {{ r.context.store_grade }}) · {{ r.entity_code }} · {{ ORDER_TYPE.get(r.order_type, r.order_type) }} · Sales {{ r.rep or '–' }}</p>
+  <dl class="inline">
+    <dt>Nilai bersih</dt><dd>{{ r.total_net | rp }}</dd>
+    <dt>Margin pesanan</dt><dd>{{ r.margin_pct | pct }}</dd>
+    <dt>Toko, 6 bulan terakhir</dt><dd>{{ r.context.store_6m_net | rp }}{% if r.context.store_6m_avg_margin_pct %} dengan margin {{ r.context.store_6m_avg_margin_pct | pct }}{% endif %}</dd>
+    <dt>Pencapaian target sales</dt><dd>{{ r.context.rep_target_progress_pct | pct }}</dd>
+  </dl>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Kode</th><th class="num">Jumlah</th><th class="num">Standar</th><th class="num">Diminta</th><th class="num">Harga bersih/unit</th><th class="num">Tambahan dari standar</th><th class="num">Margin baris</th><th class="num">Batas margin</th><th class="num">Batas manajer</th><th class="num">Stok</th></tr></thead>
+    <tbody>{% for l in r.context.lines %}
+      <tr class="{% if (l.net_unit_price < l.std_unit_price) or (l.floor_pct is not none and l.margin_pct < l.floor_pct) %}over{% endif %}"><td>{{ l.sku }}</td><td class="num">{{ l.qty | angka }}</td>
+          <td class="num">{{ l.standard }}</td><td class="num">{% if l.special_unit_price %}khusus {{ l.special_unit_price | rp }}{% elif l.extra_disc_pct %}+{{ l.extra_disc_pct | pct }}{% else %}standar{% endif %}</td>
+          <td class="num">{{ l.net_unit_price | rp }}</td><td class="num">{{ l.extra_implied_pct | pct }}</td>
+          <td class="num">{{ l.margin_pct | pct }}</td><td class="num">{{ l.floor_pct | pct }}</td><td class="num">{% if l.head_min_price %}min {{ l.head_min_price | rp }}{% elif l.head_max_disc_pct is not none %}+{{ l.head_max_disc_pct | pct }} tambahan{% else %}<span class="tag warn">belum ada</span>{% endif %}</td><td class="num">{{ l.available_stock | angka }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% if r.context.passed_up_note %}<p class="muted">Diteruskan oleh manajer: “{{ r.context.passed_up_note }}”</p>{% endif %}
+  <form method="post" action="/approvals/{{ r.request_id }}" class="decide">
+    <input name="note" placeholder="Alasan (wajib)" aria-label="Alasan keputusan" required>
+    <button class="btn" name="decision" value="APPROVE">Setujui</button>
+    <button class="btn ghost" name="decision" value="REJECT">Tolak</button>
+    {% if r.level == 'MANAGER' and not user.is_principal %}<button class="btn ghost" name="decision" value="PASS_UP">Teruskan ke prinsipal</button>{% endif %}
+  </form>
+</article>
+{% else %}
+<p>Tidak ada yang menunggu keputusan Anda.</p>
+{% endfor %}
+{% endblock %}

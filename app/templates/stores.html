@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-head">
+  <h1>Toko</h1>
+  <a class="btn" href="/stores/new">+ Toko</a>
+</div>
+<form class="search"><input name="q" value="{{ q }}" placeholder="Cari nama toko" aria-label="Cari nama toko"><button class="btn ghost">Cari</button></form>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Toko</th><th>Kota</th><th>Klasifikasi</th>{% if user.is_principal %}<th>Distributor</th>{% endif %}<th>Wilayah</th><th>Sales</th><th>Setuju WhatsApp</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.store_name }}</td><td>{{ r.city or '' }}</td><td>{% if r.grade_code %}{{ r.grade_code }} <span class="muted">{{ r.standard }}</span>{% else %}<span class="tag warn">belum ada klasifikasi</span>{% endif %}</td>
+      {% if user.is_principal %}<td>{{ r.entity_code }}</td>{% endif %}
+      <td>{{ r.territory }}</td><td>{{ r.rep or '–' }}</td>
+      <td>{% if r.consent %}<span class="tag ok">Ya</span>{% else %}<span class="tag">Belum</span>{% endif %}</td>
+    </tr>
+  {% else %}<tr><td colspan="7" class="muted">Toko tidak ditemukan.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

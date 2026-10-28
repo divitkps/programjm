@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-head">
+  <h1>{{ order.order_no }}</h1>
+  <span class="tag big status-{{ order.status | lower }}">{{ STATUS.get(order.status, order.status) }}</span>
+</div>
+<p class="muted">{{ order.store_name }} (klasifikasi {{ order.grade_code or '–' }}) · {{ ORDER_TYPE.get(order.order_type, order.order_type) }} · {{ order.order_date | tgl }} · Sales: {{ order.rep or '–' }}</p>
+
+<div class="cards">
+  <article class="card"><dl>
+    <dt>Nilai bersih</dt><dd>{{ order.total_net | rp }}</dd>
+    <dt>Jumlah barang</dt><dd>{{ order.total_qty | angka }}</dd>
+    {% if user.sees_margin %}
+    <dt>Margin setelah komisi</dt><dd>{{ order.total_margin | rp }} · {{ order.margin_pct | pct }}</dd>
+    <dt>Batas margin distributor</dt><dd>{{ order.margin_floor_pct | pct }}</dd>
+    {% endif %}
+    <dt>Diputuskan oleh</dt><dd>{{ LEVEL.get(order.required_level, '–') }}</dd>
+  </dl></article>
+</div>
+
+<div class="table-wrap stack-wrap">
+<table class="stack-table">
+  <thead><tr><th>Kode</th><th>Barang</th><th class="num">Jumlah</th><th class="num">Pricelist</th><th class="num">Standar</th><th class="num">Diminta</th><th class="num">Harga bersih/unit</th><th class="num">Total diskon</th><th class="num">Nilai bersih</th>{% if user.sees_margin %}<th class="num">Margin</th><th class="num">Batas margin</th><th class="num">Batas manajer</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for l in lines %}
+    <tr class="{% if (l.net_unit_price is not none and l.std_unit_price is not none and l.net_unit_price < l.std_unit_price) or (l.floor_pct is not none and l.margin_pct is not none and l.margin_pct < l.floor_pct) %}over{% endif %}">
+      <td data-label="Kode">{{ l.sku }}</td><td data-label="Barang">{{ l.name }}</td><td class="num" data-label="Jumlah">{{ l.qty | angka }}</td>
+      <td class="num" data-label="Pricelist">{{ l.list_price | rp }}</td><td class="num" data-label="Standar">{{ l.standard }}</td>
+      <td class="num" data-label="Diminta">{% if l.special_unit_price %}khusus {{ l.special_unit_price | rp }}{% elif l.extra_disc_pct %}+{{ l.extra_disc_pct | pct }}{% else %}standar{% endif %}</td>
+      <td class="num" data-label="Harga bersih/unit">{{ l.net_unit_price | rp }}</td><td class="num" data-label="Total diskon">{{ l.requested_disc_pct | pct }}</td><td class="num" data-label="Nilai bersih">{{ l.net_amount | rp }}</td>
+      {% if user.sees_margin %}<td class="num" data-label="Margin">{{ l.margin_pct | pct }}</td><td class="num" data-label="Batas margin">{{ l.floor_pct | pct }}</td><td class="num" data-label="Batas manajer">{% if l.head_min_price %}min {{ l.head_min_price | rp }}{% elif l.head_max_disc_pct is not none %}+{{ l.head_max_disc_pct | pct }} tambahan{% else %}<span class="tag warn">belum ada</span>{% endif %}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if order.status == 'CANCELLED' %}
+<p class="flash error">Dibatalkan{% if order.cancel_reason %}: “{{ order.cancel_reason }}”{% endif %}</p>
+{% endif %}
+
+<div class="actions">
+{% if order.status == 'APPROVED' and expired %}
+  <div class="flash warn">Persetujuan ini sudah lebih dari {{ valid_days | int }} hari. Hitung ulang dengan harga dan aturan hari ini sebelum toko mengonfirmasi.</div>
+  <form method="post" action="/orders/{{ order.order_id }}/reprice"><button class="btn">Hitung ulang dengan aturan hari ini</button></form>
+{% elif order.status == 'APPROVED' %}
+  <form method="post" action="/orders/{{ order.order_id }}/confirm"><button class="btn">Toko sudah konfirmasi: pesan stok</button></form>
+{% endif %}
+{% if order.status == 'CONFIRMED' and may_deliver %}
+  <form method="post" action="/orders/{{ order.order_id }}/deliver"><button class="btn">Catat pengiriman</button></form>
+{% endif %}
+{% if may_cancel and order.status in ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'CONFIRMED'] %}
+  <form method="post" action="/orders/{{ order.order_id }}/cancel" class="decide">
+    <input name="reason" placeholder="Alasan pembatalan (wajib)" aria-label="Alasan pembatalan" required>
+    <button class="btn ghost">Batalkan pesanan</button>
+  </form>
+{% endif %}
+</div>
+
+{% if approvals %}
+<h2>Riwayat persetujuan</h2>
+<ul class="timeline">
+{% for a in approvals %}
+  <li><strong>{{ LEVEL.get(a.level, a.level) }}</strong> · {{ REASON.get(a.reason_code, a.reason_code) }} · <span class="tag">{{ REQUEST_STATUS.get(a.status, a.status) }}</span>
+    {% if a.decider %}<br><span class="muted">{{ a.decider }}: “{{ a.decision_note }}”</span>{% endif %}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

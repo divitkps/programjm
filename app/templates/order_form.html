@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Pesanan baru</h1>
+<p class="muted">Setiap toko membeli dengan diskon standar sesuai klasifikasinya. Kosongkan dua kolom terakhir untuk menjual dengan harga standar. Isi diskon tambahan di atas standar <strong>atau</strong> harga khusus per unit hanya jika toko menegosiasikan harga; itu memerlukan persetujuan.</p>
+<form method="post" class="stack">
+  <div class="grid2">
+    <label>Toko
+      <select name="customer_id" required>
+        <option value="">– pilih –</option>
+        {% for s in stores %}<option value="{{ s.customer_id }}">{{ s.store_name }}{% if s.city %} · {{ s.city }}{% endif %} · {% if s.grade_code %}{{ s.grade_code }} ({{ s.standard }}){% else %}belum ada klasifikasi{% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Jenis pesanan
+      <select name="order_type"><option value="REGULAR">Reguler</option><option value="PROJECT">Proyek</option></select>
+    </label>
+  </div>
+  <datalist id="skus">{% for p in products %}<option value="{{ p.sku }}">{{ p.name }}</option>{% endfor %}</datalist>
+  <div class="table-wrap lines-wrap">
+  <table class="lines">
+    <thead><tr><th>Kode barang</th><th class="num">Jumlah</th><th class="num">Diskon tambahan %</th><th class="num">atau harga khusus (Rp/unit)</th></tr></thead>
+    <tbody>
+    {% for i in range(line_count) %}
+      <tr>
+        <td data-label="Kode barang"><input name="sku_{{ i }}" list="skus" autocomplete="off" aria-label="Kode barang, baris {{ i + 1 }}" {% if i == 0 %}required{% endif %}></td>
+        <td data-label="Jumlah"><input name="qty_{{ i }}" type="number" min="1" step="1" class="num" aria-label="Jumlah, baris {{ i + 1 }}"></td>
+        <td data-label="Diskon +%"><input name="extra_{{ i }}" inputmode="decimal" placeholder="0" class="num" aria-label="Diskon tambahan, baris {{ i + 1 }}"></td>
+        <td data-label="Harga khusus"><input name="price_{{ i }}" inputmode="numeric" placeholder="standar" class="num" aria-label="Harga khusus, baris {{ i + 1 }}"></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <button class="btn">Periksa dan simpan pesanan</button>
+</form>
+{% endblock %}

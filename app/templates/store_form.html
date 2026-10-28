@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Toko baru</h1>
+<form method="post" class="stack narrow">
+  <label>Nama toko <input name="store_name" required></label>
+  <label>Nama pemilik <input name="owner_name"></label>
+  <label>Wilayah
+    <select name="territory_id" required>
+      {% for t in territories %}<option value="{{ t.territory_id }}">{{ t.code }} · {{ t.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Sales
+    <select name="rep_id"><option value="">– belum ada –</option>
+      {% for r in reps %}<option value="{{ r.user_id }}">{{ r.full_name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Klasifikasi (menentukan diskon standar)
+    <select name="grade_code" required>
+      {% for g in grades %}<option value="{{ g.entity_id }}:{{ g.grade_code }}">{% if user.is_principal %}{{ g.code }} · {% endif %}{{ g.grade_code }} · {{ g.name }} ({{ g.standard }})</option>{% endfor %}
+    </select>
+  </label>
+  <label>Nomor WhatsApp <input name="whatsapp_no" placeholder="0812..."></label>
+  <label class="check"><input type="checkbox" name="consent" value="1"> Toko setuju menerima pesan WhatsApp</label>
+  <label>Kota <input name="city"></label>
+  <label>Alamat <input name="address"></label>
+  <label>NPWP (jika PKP) <input name="npwp" maxlength="16"></label>
+  <button class="btn">Simpan toko</button>
+</form>
+{% endblock %}

@@ -1,0 +1,11 @@
+fastapi==0.162.0
+uvicorn[standard]
+jinja2
+python-multipart
+psycopg[binary]==3.3.6
+psycopg_pool
+passlib
+bcrypt==4.0.1
+itsdangerous
+httpx
+pytest

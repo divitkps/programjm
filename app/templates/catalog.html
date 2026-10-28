@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Katalog</h1>
+<form class="search"><input name="q" value="{{ q }}" placeholder="Cari kode atau nama barang" aria-label="Cari kode atau nama barang"><button class="btn ghost">Cari</button></form>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Kode</th><th>Nama barang</th><th>Kategori</th><th>Status</th><th class="num">Harga pricelist</th><th class="num">Stok tersedia</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td>{{ r.sku }}</td><td>{{ r.name }}</td><td>{{ r.category }}</td>
+        <td><span class="tag {% if r.status != 'ACTIVE' %}warn{% endif %}">{{ PRODUCT_STATUS.get(r.status, r.status) }}</span></td>
+        <td class="num">{{ r.list_price | rp }}</td><td class="num">{{ r.available | angka }}</td></tr>
+  {% else %}<tr><td colspan="6" class="muted">Barang tidak ditemukan.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

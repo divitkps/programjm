@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="login">
+  <h1>KPS Sistem Distributor</h1>
+  <p class="muted">Masuk dengan email kantor Anda.</p>
+  {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login" class="stack">
+    <label>Email <input type="email" name="email" required autofocus></label>
+    <label>Kata sandi <input type="password" name="password" required></label>
+    <button class="btn">Masuk</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if user.is_principal %}Grup bulan ini{% else %}{{ user.entity_code }} bulan ini{% endif %}</h1>
+<p class="muted">Penjualan = pesanan yang sudah dikonfirmasi toko atau sudah terkirim sejak tanggal 1. Pesanan yang sudah disetujui tetapi belum dikonfirmasi toko ditampilkan terpisah. Margin dihitung setelah harga beli distributor dan komisi sales.</p>
+
+<div class="cards">
+{% for r in rows %}
+  <article class="card {% if r.margin_pct is not none and r.margin_pct < r.margin_floor_pct %}alert{% endif %}">
+    <header><strong>{{ r.code }}</strong><span class="muted">{{ r.legal_name }}</span></header>
+    <dl>
+      <dt>Penjualan bersih</dt><dd>{{ r.net | rp }}</dd>
+      <dt>Target</dt><dd>{% if r.target_pct is not none %}{{ r.target_pct | pct }} dari {{ r.revenue_target | rp }}{% else %}belum ditetapkan{% endif %}</dd>
+      {% if user.sees_margin %}
+      <dt>Margin</dt><dd>{{ r.margin_pct | pct }} <span class="muted">(batas {{ r.margin_floor_pct | pct }})</span></dd>
+      <dt>Diskon di bawah standar</dt><dd>{{ r.above_matrix | rp }}</dd>
+      {% endif %}
+      <dt>Jumlah pesanan</dt><dd>{{ r.orders }}</dd>
+      <dt>Menunggu konfirmasi toko</dt><dd>{{ r.pipeline | rp }}{% if r.pipe_orders %} · {{ r.pipe_orders }}{% endif %}{% if r.expired %} <a href="/orders?status=APPROVED" class="tag warn">{{ r.expired }} kedaluwarsa</a>{% endif %}</dd>
+      <dt>Menunggu persetujuan</dt><dd>{% if r.pending %}<a href="/approvals">{{ r.pending }}</a>{% else %}0{% endif %}</dd>
+      <dt>Piutang lewat jatuh tempo</dt><dd>{{ r.overdue | rp }}</dd>
+    </dl>
+  </article>
+{% else %}
+  <p>Belum ada distributor.</p>
+{% endfor %}
+</div>
+{% endblock %}
